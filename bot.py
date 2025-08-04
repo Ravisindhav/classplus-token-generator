@@ -22,12 +22,21 @@ def extract_username_domain(email):
 def wait_for_otp(username, domain):
     for _ in range(30):
         inbox_url = f"https://www.1secmail.com/api/v1/?action=getMessages&login={username}&domain={domain}"
-        resp = requests.get(inbox_url)
-        messages = resp.json()
+        try:
+            resp = requests.get(inbox_url)
+            print("🔍 Response text:", resp.text)  # Debug ke liye
+            messages = resp.json()
+        except Exception as e:
+            print("❌ Error parsing JSON:", e)
+            return None  # Ya continue bhi kar sakte ho
+
         if messages:
             msg_id = messages[0]["id"]
             msg_url = f"https://www.1secmail.com/api/v1/?action=readMessage&login={username}&domain={domain}&id={msg_id}"
-            msg_data = requests.get(msg_url).json()
+            try:
+                msg_data = requests.get(msg_url).json()
+            except:
+                return None
             body = msg_data.get("body", "")
             otp_match = re.search(r"\b(\d{4,6})\b", body)
             if otp_match:
